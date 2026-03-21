@@ -1,0 +1,63 @@
+Stack
+
+FastAPI service in Docker
+ConversationForwarder custom component in HA (via HACS)
+qwen3:4b for main LLM, tiny model for router classifier
+HA REST API for entity fetching and device control
+
+
+Startup
+
+Fetch all entities from HA REST API, filter to only exposed ones
+Group entities by area, cache in memory
+Refresh cache periodically (e.g. every 5 minutes)
+
+
+Config file (YAML)
+
+Maps device_id → area name
+Example: "abc123def456": "Beneden"
+
+
+Per request flow
+
+Receive text, device_id, conversation_id from ConversationForwarder
+Look up area from device_id config
+Router — tiny LLM, single prompt, no tools, returns one of: ha_control, search, general
+Fetch relevant entities for the area
+Main LLM call depending on route:
+
+ha_control → qwen3:4b + only HA tools + only area entities
+search → qwen3:4b + only search tool + no entities
+general → qwen3:4b + no tools + no entities
+
+
+Execute result:
+
+ha_control → call HA REST API directly
+search → SearXNG already called via tool
+general → just return the answer
+
+
+Return spoken response to ConversationForwarder → Kokoro → ESP
+
+
+Session/history management
+
+History stored per device_id in memory
+If gap since last interaction > 60 seconds → reset history
+Otherwise append last N exchanges (e.g. 4)
+History included in main LLM call regardless of route
+
+
+HA tools
+
+You define your own lean tool schemas (HassTurnOn, HassTurnOff, HassLightSet, etc.)
+Only the tools relevant to the route get passed
+No timer tools, media tools, etc. unless you need them
+
+
+Future additions
+
+Dutch → English translation in the Wyoming proxy layer
+Wake word improvements

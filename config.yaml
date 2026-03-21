@@ -1,0 +1,11 @@
+ha:
+  url: "http://homeassistant:8123"
+  token: "your_long_lived_token"
+
+ollama:
+  url: "http://ollama:11434"
+  main_model: "qwen3:4b"
+  router_model: "llama3.2:1b"
+
+searxng:
+  url: "http://searxng:8080"
