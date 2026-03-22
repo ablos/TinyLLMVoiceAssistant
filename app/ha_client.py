@@ -1,8 +1,11 @@
 import asyncio
+import logging
 import httpx
 import json
 import websockets
 from app.config import config
+
+logger = logging.getLogger(__name__)
 
 def _headers() -> dict:
     return { "Authorization": f"Bearer {config.ha.token}" }
@@ -127,6 +130,7 @@ async def refresh_entities():
     floor_name_to_id = new_floor_name_to_id
     device_id_to_area = new_device_id_to_area
     global_entities = new_global_entities
+    logger.info("Entity cache refreshed: %d areas, %d global entities", len(entities_by_area), len(global_entities))
         
 async def start_entity_refresh():
     await refresh_entities()
