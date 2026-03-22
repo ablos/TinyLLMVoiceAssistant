@@ -6,6 +6,7 @@ async def chat(model: str, messages: list[dict], tools: list[dict] | None = None
         model=model,
         messages=messages,
         tools=tools or [],
+        keep_alive=config.ollama.keep_alive
     )
     
     return response.message
