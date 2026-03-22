@@ -1,0 +1,97 @@
+import json
+import httpx
+from typing import Mapping, Any
+from app.config import config
+from app.ollama_client import chat
+from app.tools import HA_TOOLS
+from app.ha_client import get_entities_for_device
+from app.session import get_session, add_to_session
+
+async def _call_ha_service(domain: str, service: str, data: dict) -> None:
+    async with httpx.AsyncClient() as client:
+        await client.post(
+            f"{config.ha.url}/api/services/{domain}/{service}",
+            headers={"Authorization": f"Bearer {config.ha.token}"},
+            json=data,
+        )
+        
+async def _execute_tool(tool_name: str, args: Mapping[str, Any]) -> None:
+    if tool_name == "turn_on":
+        await _call_ha_service("homeassistant", "turn_on", { "entity_id": args["entity_id"] })
+    
+    elif tool_name == "turn_off":
+        await _call_ha_service("homeassistant", "turn_off", { "entity_id": args["entity_id"] })
+        
+    elif tool_name == "activate_scene":
+        await _call_ha_service("scene", "turn_on", { "entity_id": args["entity_id"] })
+        
+    elif tool_name == "set_light":
+        data = { "entity_id": args["entity_id"] }
+        
+        if "brightness" in args:
+            data["brightness"] = args["brightness"]
+        if "color_temp" in args:
+            data["color_temp"] = args["color_temp"]
+        if "color" in args:
+            data["rgb_color"] = [ args["color"]["r"], args["color"]["g"], args["color"]["b"] ]
+            
+        await _call_ha_service("light", "turn_on", data)
+        
+    elif tool_name == "set_temperature":
+        await _call_ha_service("climate", "set_temperature", {
+            "entity_id": args["entity_id"],
+            "temperature": args["temperature"],
+        })
+        
+async def run(text: str, device_id: str, intent: str) -> str:
+    entities = get_entities_for_device(device_id)
+    session = get_session(device_id)
+    
+    # Build system prompt
+    if intent == "ha_control":
+        entity_list = "\n".join(
+            f"- {e['entity_id']} ({e['friendly_name']}, state: {e['state']})"
+            for e in entities
+        )
+        
+        system_prompt = f"""
+            You are a Home Assistant voice assistant. Control devices using the provided tools.
+            Available entities:
+            {entity_list}
+            
+            Use the exact entity_id when calling tools. Be brief in your responses.
+        """
+        tools = HA_TOOLS
+        
+    elif intent == "search":
+        system_prompt = """
+            You are a helpful voice assistant. Answer based on search results provided.
+        """
+        
+        tools = []
+        
+    else:
+        system_prompt = """
+            You are a helpful voice assistant. Answer consisely.
+        """
+        tools = []
+    
+    # Build messages with history
+    messages = [{ "role": "system", "content": system_prompt }]
+    messages.extend(session.messages)
+    messages.append({ "role": "user", "content": text })
+    
+    # Call LLM
+    response = await chat(config.ollama.main_model, messages, tools)
+    
+    # Execute tool calls if any
+    if response.tool_calls:
+        for tool_call in response.tool_calls:
+            await _execute_tool(tool_call.function.name, tool_call.function.arguments)
+        reply = response.content or "Done."
+    else:
+        reply = response.content or "I'm not sure how to help with that."
+        
+    add_to_session(device_id, text, reply)
+    return reply
+        

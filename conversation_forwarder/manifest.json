@@ -1,0 +1,11 @@
+{
+  "domain": "conversation_forwarder",
+  "name": "Conversation Forwarder",
+  "version": "1.0.0",
+  "documentation": "",
+  "dependencies": ["conversation"],
+  "after_dependencies": ["assist_pipeline"],
+  "codeowners": [],
+  "requirements": [],
+  "iot_class": "local_polling"
+}
