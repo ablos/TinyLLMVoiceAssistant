@@ -82,7 +82,9 @@ async def run(text: str, device_id: str, intent: str) -> str:
     messages = [{ "role": "system", "content": system_prompt }]
     messages.extend(session.messages)
     messages.append({ "role": "user", "content": text })
-    
+
+    logger.info("Context: %d entities, %d history messages", len(entities), len(session.messages))
+
     # Call LLM
     response = await chat(config.ollama.main_model, messages, tools)
     
