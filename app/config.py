@@ -15,7 +15,7 @@ class OllamaConfig:
     url: str
     main_model: str
     router_model: str
-    keep_alive: str = "-1"
+    keep_alive: str = ""
     
 @dataclass
 class SearXNGConfig:
@@ -43,7 +43,7 @@ def load_config(path: str = "config.yaml") -> Config:
             url=os.getenv("OLLAMA_URL", raw.get("ollama", {}).get("url", "")),
             main_model=os.getenv("OLLAMA_MAIN_MODEL", raw.get("ollama", {}).get("main_model", "")),
             router_model=os.getenv("OLLAMA_ROUTER_MODEL", raw.get("ollama", {}).get("router_model", "")),
-            keep_alive=os.getenv("OLLAMA_KEEP_ALIVE", raw.get("ollama", {}).get("keep_alive", "-1")),
+            keep_alive=os.getenv("OLLAMA_KEEP_ALIVE", raw.get("ollama", {}).get("keep_alive", "")),
         ),
         searxng=SearXNGConfig(
             url=os.getenv("SEARXNG_URL", raw.get("searxng", {}).get("url", "")),
