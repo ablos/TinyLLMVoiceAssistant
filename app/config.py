@@ -27,21 +27,24 @@ class Config:
     searxng: SearXNGConfig
     
 def load_config(path: str = "config.yaml") -> Config:
-    with open(path) as f:
-        raw = yaml.safe_load(f)
-        
+    try:
+        with open(path) as f:
+            raw = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        raw = {}
+
     return Config(
         ha=HAConfig(
-            url=os.getenv("HA_URL", raw["ha"]["url"]),
-            token=os.getenv("HA_TOKEN", raw["ha"]["token"]),
+            url=os.getenv("HA_URL", raw.get("ha", {}).get("url", "")),
+            token=os.getenv("HA_TOKEN", raw.get("ha", {}).get("token", "")),
         ),
-        ollama = OllamaConfig(
-            url=os.getenv("OLLAMA_URL", raw["ollama"]["url"]),
-            main_model=os.getenv("OLLAMA_MAIN_MODEL", raw["ollama"]["main_model"]),
-            router_model=os.getenv("OLLAMA_ROUTER_MODEL", raw["ollama"]["router_model"]),
+        ollama=OllamaConfig(
+            url=os.getenv("OLLAMA_URL", raw.get("ollama", {}).get("url", "")),
+            main_model=os.getenv("OLLAMA_MAIN_MODEL", raw.get("ollama", {}).get("main_model", "")),
+            router_model=os.getenv("OLLAMA_ROUTER_MODEL", raw.get("ollama", {}).get("router_model", "")),
         ),
         searxng=SearXNGConfig(
-            url=os.getenv("SEARXNG_URL", raw["searxng"]["url"]),
+            url=os.getenv("SEARXNG_URL", raw.get("searxng", {}).get("url", "")),
         )
     )
     
