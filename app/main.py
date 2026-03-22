@@ -1,10 +1,14 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.ha_client import start_entity_refresh
 from app.router import classify
 from app.agent import run
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,6 +31,9 @@ class ConversationResponse(BaseModel):
     
 @app.post("/conversation", response_model=ConversationResponse)
 async def conversation(request: ConversationRequest):
+    logger.info("[%s] '%s'", request.device_id, request.text)
     intent = await classify(request.text)
+    logger.info("[%s] intent: %s", request.device_id, intent)
     reply = await run(request.text, request.device_id, intent)
+    logger.info("[%s] reply: '%s'", request.device_id, reply)
     return ConversationResponse(message=reply)

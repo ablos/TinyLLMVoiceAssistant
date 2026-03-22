@@ -27,8 +27,8 @@ class ConversationForwarderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
 
     @staticmethod
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
-        return OptionsFlow(config_entry)
+    def async_get_options_flow(_config_entry: config_entries.ConfigEntry):
+        return OptionsFlow()
 
 
 class OptionsFlow(config_entries.OptionsFlow):

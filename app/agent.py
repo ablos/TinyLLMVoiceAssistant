@@ -1,4 +1,4 @@
-import json
+import logging
 import httpx
 from typing import Mapping, Any
 from app.config import config
@@ -6,6 +6,8 @@ from app.ollama_client import chat
 from app.tools import HA_TOOLS
 from app.ha_client import get_entities_for_device
 from app.session import get_session, add_to_session
+
+logger = logging.getLogger(__name__)
 
 async def _call_ha_service(domain: str, service: str, data: dict) -> None:
     async with httpx.AsyncClient() as client:
@@ -87,6 +89,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
     # Execute tool calls if any
     if response.tool_calls:
         for tool_call in response.tool_calls:
+            logger.info("Tool call: %s(%s)", tool_call.function.name, dict(tool_call.function.arguments))
             await _execute_tool(tool_call.function.name, tool_call.function.arguments)
         reply = response.content or "Done."
     else:
