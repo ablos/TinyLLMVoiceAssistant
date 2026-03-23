@@ -132,7 +132,7 @@ SET_TIMER = {
                 },
                 "confirmation": {
                     "type": "string",
-                    "description": "Short confirmation to speak immediately, e.g. 'Timer set for 10 minutes!' or 'Reminder set for 5 minutes!'"
+                    "description": "Confirmation to speak immediately, matching the user's phrasing. E.g. if the user said 'remind me', say 'I will remind you in 10 minutes to take out the pizza!'. If the user said 'set a timer', say 'Timer set for 10 minutes!'"
                 },
                 "completion_message": {
                     "type": "string",
