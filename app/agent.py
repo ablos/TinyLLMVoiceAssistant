@@ -14,7 +14,7 @@ from app.confirmations import get_confirmation
 
 logger = logging.getLogger(__name__)
 
-_timer_sound_path = "sounds/timer.mp3"
+_timer_sound_path = "sounds/timer.wav"
 _timer_sound_duration: float = File(_timer_sound_path).info.length if os.path.exists(_timer_sound_path) else 1.0
 
 async def _call_ha_service(domain: str, service: str, data: dict) -> None:
@@ -90,7 +90,7 @@ async def _run_timer(device_id: str, duration_seconds: int, completion_message: 
     if media_player:
         await _call_ha_service("media_player", "play_media", {
             "entity_id": media_player,
-            "media_content_id": f"{config.app.server_url}/sounds/timer.mp3",
+            "media_content_id": f"{config.app.server_url}/{_timer_sound_path}",
             "media_content_type": "music",
         })
         await asyncio.sleep(_timer_sound_duration + 0.2)
