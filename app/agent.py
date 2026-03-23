@@ -63,7 +63,7 @@ def _tools_for_entities(entities: list[dict]) -> list[dict]:
         
 async def run(text: str, device_id: str, intent: str) -> str:
     entities = get_entities_for_device(device_id)
-    session = get_session(device_id)
+    session = get_session(device_id, intent)
     
     # Build system prompt
     if intent == "ha_control":
@@ -117,7 +117,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
         reply = response.content or "I'm not sure how to help with that."
         
     if intent != "ha_control":
-        add_to_session(device_id, text, reply)
+        add_to_session(device_id, text, reply, intent)
         
     return reply
         
