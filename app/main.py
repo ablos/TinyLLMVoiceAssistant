@@ -31,9 +31,17 @@ class ConversationResponse(BaseModel):
     
 @app.post("/conversation", response_model=ConversationResponse)
 async def conversation(request: ConversationRequest):
+    import time
+    t0 = time.monotonic()
     logger.info("[%s] '%s'", request.device_id, request.text)
+
     intent = await classify(request.text)
-    logger.info("[%s] intent: %s", request.device_id, intent)
+    t1 = time.monotonic()
+    logger.info("[%s] intent: %s (%.2fs)", request.device_id, intent, t1 - t0)
+
     reply = await run(request.text, request.device_id, intent)
-    logger.info("[%s] reply: '%s'", request.device_id, reply)
+    t2 = time.monotonic()
+    logger.info("[%s] reply: '%s' (%.2fs)", request.device_id, reply, t2 - t1)
+    logger.info("[%s] total: %.2fs", request.device_id, t2 - t0)
+
     return ConversationResponse(message=reply)
