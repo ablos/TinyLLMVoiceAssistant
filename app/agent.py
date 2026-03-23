@@ -116,6 +116,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     custom_instructions = config.devices.get(device_id, {}).get(intent, "")
     if custom_instructions:
         system_prompt += f"\n\n{custom_instructions}"
+        logger.info("Custom instructions applied for %s", device_id)
     
     # Build messages - no history for ha_control, it causes confusion
     messages = [{ "role": "system", "content": system_prompt }]

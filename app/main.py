@@ -45,3 +45,7 @@ async def conversation(request: ConversationRequest):
     logger.info("[%s] total: %.2fs", request.device_id, t2 - t0)
 
     return ConversationResponse(message=reply, continue_conversation=reply.rstrip().endswith("?"))
+
+@app.get("/health")
+async def health():
+    return { "status": "ok" }

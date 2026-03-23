@@ -1,12 +1,13 @@
 import time
 from collections import deque
 from dataclasses import dataclass, field
+from app.config import config
 
 HISTORY_TIMEOUT = 60
 
 @dataclass
 class Session:
-    messages: deque = field(default_factory=lambda: deque(maxlen=8))
+    messages: deque = field(default_factory=lambda: deque(maxlen=config.app.max_message_history))
     last_active: float = field(default_factory=time.time)
     last_intent: str = ""
 

@@ -10,7 +10,7 @@ async def search(query: str, categories: str = "general") -> str:
         resp.raise_for_status()
         data = resp.json()
         
-    results = data.get("results", [])[:5]
+    results = data.get("results", [])[:config.app.max_search_results]
     
     if not results:
         return "No results found."
