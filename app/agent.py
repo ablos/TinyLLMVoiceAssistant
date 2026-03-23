@@ -1,7 +1,9 @@
+import os
 import logging
 import httpx
 import asyncio
 from typing import Mapping, Any
+from mutagen import File
 from app.config import config
 from app.ollama_client import chat
 from app.ha_client import get_entities_for_device, get_context_info, get_live_states, get_media_player, get_tts_engine
@@ -11,6 +13,9 @@ from app.search import search
 from app.confirmations import get_confirmation
 
 logger = logging.getLogger(__name__)
+
+_timer_sound_path = "sounds/timer.mp3"
+_timer_sound_duration: float = File(_timer_sound_path).info.length if os.path.exists(_timer_sound_path) else 1.0
 
 async def _call_ha_service(domain: str, service: str, data: dict) -> None:
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -80,6 +85,16 @@ async def _speak(device_id: str, message: str) -> None:
 async def _run_timer(device_id: str, duration_seconds: int, completion_message: str) -> None:
     await asyncio.sleep(duration_seconds)
     logger.info("Timer finished for device %s: %s", device_id, completion_message)
+    media_player = get_media_player(device_id)
+    
+    if media_player:
+        await _call_ha_service("media_player", "play_media", {
+            "entity_id": media_player,
+            "media_content_id": f"{config.app.server_url}/sounds/timer.mp3",
+            "media_content_type": "music",
+        })
+        await asyncio.sleep(_timer_sound_duration + 0.2)
+    
     await _speak(device_id, completion_message)
         
 async def run(text: str, device_id: str, intent: str, query: str = "") -> str:

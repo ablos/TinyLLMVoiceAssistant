@@ -6,3 +6,4 @@ pyyaml
 python-dotenv
 websockets
 pytz
+mutagen

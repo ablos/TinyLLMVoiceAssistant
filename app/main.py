@@ -2,6 +2,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from app.ha_client import start_entity_refresh
 from app.router import classify
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
     yield
     
 app = FastAPI(lifespan=lifespan)
+app.mount("/sounds", StaticFiles(directory="sounds"), name="sounds")
 
 class ConversationRequest(BaseModel):
     text: str

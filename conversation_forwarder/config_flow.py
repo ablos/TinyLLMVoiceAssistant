@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from .const import CONF_URL, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_URL, default="http://ha-voice-agent:8000/conversation"): str,
+    vol.Required(CONF_URL, default="http://ha-voice-agent:10100/conversation"): str,
 })
 
 
