@@ -84,6 +84,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
             Use the exact entity_id when calling tools. Be brief in your responses.
             When the intent is ambiguous (e.g. "lights on", "light's on"), treat it as a command, not a status query.
         """
+        
         tools = _tools_for_entities(entities)
         logger.info("Tools: %s", [t["function"]["name"] for t in tools])
         
@@ -110,6 +111,11 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
             You are a helpful voice assistant. Answer consisely.
         """
         tools = []
+    
+    # Add custom instructions from config.yaml
+    custom_instructions = config.devices.get(device_id, {}).get(intent, "")
+    if custom_instructions:
+        system_prompt += f"\n\n{custom_instructions}"
     
     # Build messages - no history for ha_control, it causes confusion
     messages = [{ "role": "system", "content": system_prompt }]

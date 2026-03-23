@@ -27,8 +27,9 @@ class Config:
     ha: HAConfig
     ollama: OllamaConfig
     searxng: SearXNGConfig
+    devices: dict[str, dict] = field(default_factory=dict)
     
-def load_config(path: str = "config.yaml") -> Config:
+def load_config(path: str = "data/config.yaml") -> Config:
     try:
         with open(path) as f:
             raw = yaml.safe_load(f) or {}
@@ -49,7 +50,8 @@ def load_config(path: str = "config.yaml") -> Config:
         ),
         searxng=SearXNGConfig(
             url=os.getenv("SEARXNG_URL", raw.get("searxng", {}).get("url", "")),
-        )
+        ),
+        devices=raw.get("devices", {})
     )
     
 config = load_config()
