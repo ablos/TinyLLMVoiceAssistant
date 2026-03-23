@@ -1,11 +1,12 @@
 import logging
 import httpx
+import asyncio
 from typing import Mapping, Any
 from app.config import config
 from app.ollama_client import chat
-from app.ha_client import get_entities_for_device, get_context_info, get_live_states
+from app.ha_client import get_entities_for_device, get_context_info, get_live_states, get_media_player, get_tts_engine
 from app.session import get_session, add_to_session
-from app.tools import HA_TOOLS
+from app.tools import HA_TOOLS, SET_TIMER
 from app.search import search
 from app.confirmations import get_confirmation
 
@@ -62,6 +63,24 @@ def _tools_for_entities(entities: list[dict]) -> list[dict]:
                 tools.append(tool)
                 
     return tools
+
+async def _speak(device_id: str, message: str) -> None:
+    media_player = get_media_player(device_id)
+    
+    if not media_player:
+        logger.warning("No media player found for device %s", device_id)
+        return
+    
+    await _call_ha_service("tts", "speak", {
+        "entity_id": get_tts_engine(),
+        "media_player_entity_id": media_player,
+        "message": message,
+    })
+    
+async def _run_timer(device_id: str, duration_seconds: int, completion_message: str) -> None:
+    await asyncio.sleep(duration_seconds)
+    logger.info("Timer finished for device %s: %s", device_id, completion_message)
+    await _speak(device_id, completion_message)
         
 async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     entities = get_entities_for_device(device_id)
@@ -104,6 +123,14 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
         
         tools = []
         
+    elif intent == "timer":
+        system_prompt = """
+            You are a helpful voice assistant. The user want to set a timer or reminder.
+            Call the set_timer tool with the correct duration, a short confirmation, and a natural completion message for voice.
+        """
+        
+        tools = [SET_TIMER]
+        
     else:
         system_prompt = f"""
             [{get_context_info()}]
@@ -120,7 +147,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     
     # Build messages - no history for ha_control, it causes confusion
     messages = [{ "role": "system", "content": system_prompt }]
-    if intent != "ha_control":
+    if intent not in ("ha_control", "timer"):
         messages.extend(session.messages)
     messages.append({ "role": "user", "content": text })
 
@@ -132,15 +159,26 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     
     # Execute tool calls if any
     if response.tool_calls:
+        reply = response.content or get_confirmation()
+        tasks = []
+        
         for tool_call in response.tool_calls:
             logger.info("Tool call: %s(%s)", tool_call.function.name, dict(tool_call.function.arguments))
-            await _execute_tool(tool_call.function.name, tool_call.function.arguments)
+            
+            if tool_call.function.name == "set_timer":
+                args = tool_call.function.arguments
+                asyncio.create_task(_run_timer(device_id, args["duration_seconds"], args["completion_message"]))
+                reply = args["confirmation"]
+            else:
+                tasks.append(_execute_tool(tool_call.function.name, tool_call.function.arguments))
+                
+        if tasks:
+            await asyncio.gather(*tasks)
 
-        reply = response.content or get_confirmation()
     else:
         reply = response.content or "I'm not sure how to help with that."
         
-    if intent != "ha_control":
+    if intent not in ("ha_control", "timer"):
         add_to_session(device_id, text, reply, intent)
         
     return reply

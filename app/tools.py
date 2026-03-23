@@ -115,6 +115,31 @@ HA_TOOLS: dict[str, list[dict]] = {
     "media_player": [TURN_ON, TURN_OFF],
     "input_boolean": [TURN_ON, TURN_OFF],
     "scene": [ACTIVATE_SCENE],
-    "climate": [SET_TEMPERATURE],
+    "climate": [SET_TEMPERATURE]
 }
 
+SET_TIMER = {
+    "type": "function",
+    "function": {
+        "name": "set_timer",
+        "description": "Set a timer or reminder",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "duration_seconds": {
+                    "type": "integer",
+                    "description": "Duration of the timer in seconds"
+                },
+                "confirmation": {
+                    "type": "string",
+                    "description": "Short confirmation to speak immediately, e.g. 'Timer set for 10 minutes!' or 'Reminder set for 5 minutes!'"
+                },
+                "completion_message": {
+                    "type": "string",
+                    "description": "Message to speak when the timer finishes, e.g. 'Time to take out the pizza!' or 'Time to leave!'"
+                }
+            },
+            "required": ["duration_seconds", "confirmation", "completion_message"]
+        }
+    }
+}

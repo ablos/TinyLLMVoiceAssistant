@@ -9,9 +9,6 @@ from app.config import config
 
 logger = logging.getLogger(__name__)
 
-ha_location: str = ""
-ha_timezone: str = ""
-
 def get_context_info() -> str:
     if ha_timezone:
         tz = pytz.timezone(ha_timezone)
@@ -47,16 +44,25 @@ async def _ws_fetch(*commands: str) -> dict[int, any]:
 
 entities_by_label: dict[str, list[dict]] = {}
 device_labels: dict[str, list[str]] = {}
+device_media_players: dict[str, str] = {}
+
+ha_location: str = ""
+ha_timezone: str = ""
+ha_tts_engine: str = ""
 
 async def refresh_entities():
     # Fetch entities and devices
     results = await _ws_fetch(
         "config/device_registry/list",
         "config/entity_registry/list",
+        "assist_pipeline/pipeline/list",
     )
     
     devices = results[1]
     entity_registry = results[2]
+    pipelines = results[3]
+    
+    preferred = next((p for p in pipelines if p.get("is_preferred")), pipelines[0] if pipelines else None)
     
     async with httpx.AsyncClient() as client:
         # Fetch states
@@ -77,9 +83,13 @@ async def refresh_entities():
         
     new_device_labels = { d["id"]: d.get("labels", []) for d in devices }
     new_entities_by_label: dict[str, list[dict]] = {}
+    new_device_media_players: dict[str, str] = {}
     
     for entry in entity_registry:
         entity_id = entry["entity_id"]
+        
+        if entry["entity_id"].startswith("media_player.") and entry.get("device_id"):
+            new_device_media_players[entry["device_id"]] = entry["entity_id"]
         
         if entity_id not in states:
             continue
@@ -92,11 +102,13 @@ async def refresh_entities():
                 "state": state["state"],
             })
             
-    global entities_by_label, device_labels, ha_location, ha_timezone
+    global entities_by_label, device_labels, device_media_players, ha_location, ha_timezone, ha_tts_engine
     entities_by_label = new_entities_by_label
     device_labels = new_device_labels
+    device_media_players = new_device_media_players
     ha_location = ha_config.get("location_name", "")
     ha_timezone = ha_config.get("time_zone", "")
+    ha_tts_engine = preferred["tts_engine"] if preferred else ""
     logger.info("Entity cache refreshed: %d labels, %d labeled entities", len(entities_by_label), sum(len(v) for v in entities_by_label.values()))
         
 async def start_entity_refresh():
@@ -129,3 +141,9 @@ async def get_live_states(entities: list[dict]) -> list[dict]:
         {**e, "state": states.get(e["entity_id"], e["state"])}
         for e in entities
     ]
+    
+def get_media_player(device_id: str) -> str:
+    return device_media_players.get(device_id, "")
+
+def get_tts_engine() -> str:
+    return ha_tts_engine
