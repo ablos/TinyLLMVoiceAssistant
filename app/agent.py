@@ -95,9 +95,10 @@ async def run(text: str, device_id: str, intent: str) -> str:
         """
         tools = []
     
-    # Build messages with history
+    # Build messages - no history for ha_control, it causes confusion
     messages = [{ "role": "system", "content": system_prompt }]
-    messages.extend(session.messages)
+    if intent != "ha_control":
+        messages.extend(session.messages)
     messages.append({ "role": "user", "content": text })
 
     logger.info("Context: %d entities, %d history messages", len(entities), len(session.messages))
