@@ -7,6 +7,7 @@ from app.ha_client import get_entities_for_device, get_context_info
 from app.session import get_session, add_to_session
 from app.tools import HA_TOOLS
 from app.search import search
+from app.confirmations import get_confirmation
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
             logger.info("Tool call: %s(%s)", tool_call.function.name, dict(tool_call.function.arguments))
             await _execute_tool(tool_call.function.name, tool_call.function.arguments)
 
-        reply = response.content or "Done."
+        reply = response.content or get_confirmation()
     else:
         reply = response.content or "I'm not sure how to help with that."
         
