@@ -60,9 +60,11 @@ async def refresh_entities():
     
     devices = results[1]
     entity_registry = results[2]
-    pipelines = results[3]
+    pipeline_result = results[3]
     
-    preferred = next((p for p in pipelines if p.get("is_preferred")), pipelines[0] if pipelines else None)
+    pipelines = pipeline_result.get("pipelines", [])
+    prefered_id = pipeline_result.get("preferred_pipeline")
+    preferred = next((p for p in pipelines if p.get("id") == prefered_id), pipelines[0] if pipelines else None)
     
     async with httpx.AsyncClient() as client:
         # Fetch states
