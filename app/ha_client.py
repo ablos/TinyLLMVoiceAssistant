@@ -118,3 +118,14 @@ def get_entities_for_device(device_id: str) -> list[dict]:
                 result.append(entity)
                 
     return result
+
+async def get_live_states(entities: list[dict]) -> list[dict]:
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{config.ha.url}/api/states", headers=_headers())
+        resp.raise_for_status()
+        states = { s["entity_id"]: s["state"] for s in resp.json() }
+        
+    return [
+        {**e, "state": states.get(e["entity_id"], e["state"])}
+        for e in entities
+    ]

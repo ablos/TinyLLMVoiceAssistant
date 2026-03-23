@@ -3,7 +3,7 @@ import httpx
 from typing import Mapping, Any
 from app.config import config
 from app.ollama_client import chat
-from app.ha_client import get_entities_for_device, get_context_info
+from app.ha_client import get_entities_for_device, get_context_info, get_live_states
 from app.session import get_session, add_to_session
 from app.tools import HA_TOOLS
 from app.search import search
@@ -69,6 +69,8 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     
     # Build system prompt
     if intent == "ha_control":
+        entities = await get_live_states(entities)
+        
         entity_list = "\n".join(
             f"- {e['entity_id']} ({e['friendly_name']}, state: {e['state']})"
             for e in entities
@@ -80,6 +82,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
             {entity_list}
             
             Use the exact entity_id when calling tools. Be brief in your responses.
+            When the intent is ambiguous (e.g. "lights on", "light's on"), treat it as a command, not a status query.
         """
         tools = _tools_for_entities(entities)
         logger.info("Tools: %s", [t["function"]["name"] for t in tools])
