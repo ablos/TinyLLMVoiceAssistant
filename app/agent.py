@@ -116,6 +116,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
     else:
         reply = response.content or "I'm not sure how to help with that."
         
-    add_to_session(device_id, text, reply)
+    if intent != "ha_control":
+        add_to_session(device_id, text, reply)
     return reply
         
