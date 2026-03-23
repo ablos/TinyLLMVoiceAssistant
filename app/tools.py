@@ -109,13 +109,35 @@ SET_TEMPERATURE = {
     }
 }
 
-HA_DOMAIN_TOOLS: dict[str, list[dict]] = {
+HA_TOOLS: dict[str, list[dict]] = {
     "light": [TURN_ON, TURN_OFF, SET_LIGHT],
     "switch": [TURN_ON, TURN_OFF],
     "media_player": [TURN_ON, TURN_OFF],
     "input_boolean": [TURN_ON, TURN_OFF],
     "scene": [ACTIVATE_SCENE],
     "climate": [SET_TEMPERATURE],
+}
+
+SEARCH = {
+    "type": "function",
+    "function": {
+        "name": "search",
+        "description": "Search the internet for current information",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query"
+                },
+                "categories": {
+                    "type": "string",
+                    "description": "Comma-separated search categories, e.g. 'general', 'news', 'science'",
+                }
+            },
+            "required": ["query"]
+        }
+    }
 }
 
 SEARCH_TOOLS = []
