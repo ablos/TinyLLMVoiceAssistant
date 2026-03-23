@@ -24,7 +24,7 @@ async def _execute_tool(tool_name: str, args: Mapping[str, Any]) -> None:
         await _call_ha_service("homeassistant", "turn_off", { "entity_id": args["entity_id"] })
         
     elif tool_name == "activate_scene":
-        await _call_ha_service("scene", "turn_on", { "entity_id": args["entity_id"] })
+        await _call_ha_service("scene", "turn_on", { "entity_id": args["entity_id"], "transition": 3 })
         
     elif tool_name == "set_light":
         data = { "entity_id": args["entity_id"] }
@@ -118,5 +118,6 @@ async def run(text: str, device_id: str, intent: str) -> str:
         
     if intent != "ha_control":
         add_to_session(device_id, text, reply)
+        
     return reply
         
