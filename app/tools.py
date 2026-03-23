@@ -109,5 +109,13 @@ SET_TEMPERATURE = {
     }
 }
 
-HA_TOOLS = [TURN_ON, TURN_OFF, ACTIVATE_SCENE, SET_LIGHT, SET_TEMPERATURE]
+HA_DOMAIN_TOOLS: dict[str, list[dict]] = {
+    "light": [TURN_ON, TURN_OFF, SET_LIGHT],
+    "switch": [TURN_ON, TURN_OFF],
+    "media_player": [TURN_ON, TURN_OFF],
+    "input_boolean": [TURN_ON, TURN_OFF],
+    "scene": [ACTIVATE_SCENE],
+    "climate": [SET_TEMPERATURE],
+}
+
 SEARCH_TOOLS = []

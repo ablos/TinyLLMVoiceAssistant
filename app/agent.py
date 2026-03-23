@@ -3,7 +3,6 @@ import httpx
 from typing import Mapping, Any
 from app.config import config
 from app.ollama_client import chat
-from app.tools import HA_TOOLS
 from app.ha_client import get_entities_for_device
 from app.session import get_session, add_to_session
 
@@ -45,6 +44,23 @@ async def _execute_tool(tool_name: str, args: Mapping[str, Any]) -> None:
             "temperature": args["temperature"],
         })
         
+def _tools_for_entities(entities: list[dict]) -> list[dict]:
+    from app.tools import HA_DOMAIN_TOOLS
+    seen = set()
+    tools = []
+    
+    for e in entities:
+        domain = e["entity_id"].split(".")[0]
+        
+        for tool in HA_DOMAIN_TOOLS.get(domain, []):
+            name = tool["function"]["name"]
+            
+            if name not in seen:
+                seen.add(name)
+                tools.append(tool)
+                
+    return tools
+        
 async def run(text: str, device_id: str, intent: str) -> str:
     entities = get_entities_for_device(device_id)
     session = get_session(device_id)
@@ -63,7 +79,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
             
             Use the exact entity_id when calling tools. Be brief in your responses.
         """
-        tools = HA_TOOLS
+        tools = _tools_for_entities(entities)
         
     elif intent == "search":
         system_prompt = """
