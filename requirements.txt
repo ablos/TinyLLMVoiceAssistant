@@ -5,3 +5,4 @@ ollama
 pyyaml
 python-dotenv
 websockets
+pytz

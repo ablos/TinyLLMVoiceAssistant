@@ -3,9 +3,25 @@ import logging
 import httpx
 import json
 import websockets
+import pytz
+from datetime import datetime
 from app.config import config
 
 logger = logging.getLogger(__name__)
+
+ha_location: str = ""
+ha_timezone: str = ""
+
+def get_context_info() -> str:
+    if ha_timezone:
+        tz = pytz.timezone(ha_timezone)
+        now = datetime.now(tz)
+    else:
+        now = datetime.now()
+        
+    time_str = now.strftime("%A, %B, %d %Y, %H:%M")
+    location_str = f", Location: {ha_location}" if ha_location else ""
+    return f"Time: {time_str}{location_str}"
 
 def _headers() -> dict:
     return { "Authorization": f"Bearer {config.ha.token}" }
@@ -33,6 +49,7 @@ entities_by_label: dict[str, list[dict]] = {}
 device_labels: dict[str, list[str]] = {}
 
 async def refresh_entities():
+    # Fetch entities and devices
     results = await _ws_fetch(
         "config/device_registry/list",
         "config/entity_registry/list",
@@ -42,12 +59,21 @@ async def refresh_entities():
     entity_registry = results[2]
     
     async with httpx.AsyncClient() as client:
+        # Fetch states
         states_resp = await client.get(
             f"{config.ha.url}/api/states",
             headers=_headers()
         )
         states_resp.raise_for_status()
         states = { s["entity_id"]: s for s in states_resp.json() }
+        
+        # Fetch location and time data
+        config_resp = await client.get(
+            f"{config.ha.url}/api/config",
+            headers=_headers(),
+        )
+        config_resp.raise_for_status()
+        ha_config = config_resp.json()
         
     new_device_labels = { d["id"]: d.get("labels", []) for d in devices }
     new_entities_by_label: dict[str, list[dict]] = {}
@@ -66,9 +92,11 @@ async def refresh_entities():
                 "state": state["state"],
             })
             
-    global entities_by_label, device_labels
+    global entities_by_label, device_labels, ha_location, ha_timezone
     entities_by_label = new_entities_by_label
     device_labels = new_device_labels
+    ha_location = ha_config.get("location_name", "")
+    ha_timezone = ha_config.get("time_zone", "")
     logger.info("Entity cache refreshed: %d labels, %d labeled entities", len(entities_by_label), sum(len(v) for v in entities_by_label.values()))
         
 async def start_entity_refresh():

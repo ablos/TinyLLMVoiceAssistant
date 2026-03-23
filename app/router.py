@@ -1,5 +1,6 @@
 from app.config import config
 from app.ollama_client import chat
+from app.ha_client import get_context_info
 
 CLASSIFY_PROMPT = """
     You are an intent classifier for a Home Assistant voice assistant.
@@ -16,7 +17,7 @@ CLASSIFY_PROMPT = """
 
 async def classify(text: str) -> tuple[str, str]:
     messages = [
-        { "role": "system", "content": CLASSIFY_PROMPT },
+        { "role": "system", "content": f"{CLASSIFY_PROMPT}\n{get_context_info()}" },
         { "role": "user", "content": text }
     ]
     
