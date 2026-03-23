@@ -172,8 +172,8 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
             else:
                 tasks.append(_execute_tool(tool_call.function.name, tool_call.function.arguments))
                 
-        if tasks:
-            await asyncio.gather(*tasks)
+        for task in tasks:
+            asyncio.create_task(task)
 
     else:
         reply = response.content or "I'm not sure how to help with that."
