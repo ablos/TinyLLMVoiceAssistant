@@ -8,7 +8,7 @@ CLASSIFY_PROMPT = """
     
     - ha_control: The user wants to control a Home Assistant device (lights, thermostat, scenes, switches, etc.)
     - search: The user wants to look something up on the internet or requires time sensitive knowledge
-    - general: Anything else (questions, conversation, calculations, etc.)
+    - general: Anything else (questions, conversation, calculations, etc.) including questions about current time or date, since that information is already provided.
     
     Respond with only the intent label. Exception: if the intent is "search", respond with "search|<optimized search query>".
     No explanation, no punctuation.
