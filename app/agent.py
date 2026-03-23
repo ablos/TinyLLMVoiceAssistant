@@ -80,6 +80,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
             Use the exact entity_id when calling tools. Be brief in your responses.
         """
         tools = _tools_for_entities(entities)
+        logger.info("Tools: %s", [t["function"]["name"] for t in tools])
         
     elif intent == "search":
         system_prompt = """
