@@ -9,7 +9,7 @@ from app.session import get_session, add_to_session
 logger = logging.getLogger(__name__)
 
 async def _call_ha_service(domain: str, service: str, data: dict) -> None:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         await client.post(
             f"{config.ha.url}/api/services/{domain}/{service}",
             headers={"Authorization": f"Bearer {config.ha.token}"},
