@@ -35,11 +35,11 @@ async def conversation(request: ConversationRequest):
     t0 = time.monotonic()
     logger.info("[%s] '%s'", request.device_id, request.text)
 
-    intent = await classify(request.text)
+    intent, query = await classify(request.text)
     t1 = time.monotonic()
     logger.info("[%s] intent: %s (%.2fs)", request.device_id, intent, t1 - t0)
 
-    reply = await run(request.text, request.device_id, intent)
+    reply = await run(request.text, request.device_id, intent, query)
     t2 = time.monotonic()
     logger.info("[%s] reply: '%s' (%.2fs)", request.device_id, reply, t2 - t1)
     logger.info("[%s] total: %.2fs", request.device_id, t2 - t0)

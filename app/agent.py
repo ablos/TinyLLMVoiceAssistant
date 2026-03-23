@@ -5,7 +5,7 @@ from app.config import config
 from app.ollama_client import chat
 from app.ha_client import get_entities_for_device
 from app.session import get_session, add_to_session
-from app.tools import HA_TOOLS, SEARCH_TOOLS
+from app.tools import HA_TOOLS
 from app.search import search
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def _tools_for_entities(entities: list[dict]) -> list[dict]:
                 
     return tools
         
-async def run(text: str, device_id: str, intent: str) -> str:
+async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     entities = get_entities_for_device(device_id)
     session = get_session(device_id, intent)
     
@@ -84,11 +84,18 @@ async def run(text: str, device_id: str, intent: str) -> str:
         logger.info("Tools: %s", [t["function"]["name"] for t in tools])
         
     elif intent == "search":
-        system_prompt = """
-            You are a helpful voice assistant. You MUST use the search tool to answer every question — never answer from your own knowledge. After searching, summarize the result in one or two sentences suitable for voice.
+        search_results = await search(query or text)
+        
+        system_prompt = f"""
+            You are a helpful voice assistant.
+            Answer the user's question based on the following search results.
+            Be concise, one or two sentences, suitable for voice.
+            
+            Search results:
+            {search_results}
         """
         
-        tools = SEARCH_TOOLS
+        tools = []
         
     else:
         system_prompt = """
@@ -110,23 +117,10 @@ async def run(text: str, device_id: str, intent: str) -> str:
     
     # Execute tool calls if any
     if response.tool_calls:
-        tool_results = []
-        
         for tool_call in response.tool_calls:
             logger.info("Tool call: %s(%s)", tool_call.function.name, dict(tool_call.function.arguments))
+            await _execute_tool(tool_call.function.name, tool_call.function.arguments)
             
-            if tool_call.function.name == "search":
-                args = tool_call.function.arguments
-                results = await search(args["query"], args.get("categories", "general"))
-                tool_results.append({"role": "tool", "content": results})
-            else:
-                await _execute_tool(tool_call.function.name, tool_call.function.arguments)
-                
-        if tool_results:
-            messages.append({"role": "assistant", "content": "", "tool_calls": response.tool_calls})
-            messages.extend(tool_results)
-            response = await chat(config.ollama.main_model, messages)
-                
         reply = response.content or "Done."
     else:
         reply = response.content or "I'm not sure how to help with that."

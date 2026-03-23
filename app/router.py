@@ -9,11 +9,12 @@ CLASSIFY_PROMPT = """
     - search: The user wants to look something up on the internet or requires time sensitive knowledge
     - general: Anything else (questions, conversation, calculations, etc.)
     
-    Respond with only the intent label, nothing else. No explanation, no punctuation.
+    Respond with only the intent label. Exception: if the intent is "search", respond with "search|<optimized search query>".
+    No explanation, no punctuation.
 """
 
 
-async def classify(text: str) -> str:
+async def classify(text: str) -> tuple[str, str]:
     messages = [
         { "role": "system", "content": CLASSIFY_PROMPT },
         { "role": "user", "content": text }
@@ -22,7 +23,11 @@ async def classify(text: str) -> str:
     response = await chat(config.ollama.router_model, messages)
     result = (response.content or "").strip().lower()
     
-    if result not in ("ha_control", "search", "general"):
-        return "general"
+    if result.startswith("search|"):
+        _, query = result.split("|", 1)
+        return "search", query.strip()
     
-    return result
+    if result not in ("ha_control", "search", "general"):
+        return "general", text
+    
+    return result, text
