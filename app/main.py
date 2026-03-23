@@ -44,4 +44,4 @@ async def conversation(request: ConversationRequest):
     logger.info("[%s] reply: '%s' (%.2fs)", request.device_id, reply, t2 - t1)
     logger.info("[%s] total: %.2fs", request.device_id, t2 - t0)
 
-    return ConversationResponse(message=reply)
+    return ConversationResponse(message=reply, continue_conversation=reply.rstrip().endswith("?"))
