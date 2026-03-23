@@ -85,7 +85,7 @@ async def run(text: str, device_id: str, intent: str) -> str:
         
     elif intent == "search":
         system_prompt = """
-            You are a helpful voice assistant. Use the search tool to find information, then answer concisely in one or two sentences suitable for voice.
+            You are a helpful voice assistant. You MUST use the search tool to answer every question — never answer from your own knowledge. After searching, summarize the result in one or two sentences suitable for voice.
         """
         
         tools = SEARCH_TOOLS
