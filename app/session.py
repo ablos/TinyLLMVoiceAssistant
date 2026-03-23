@@ -3,8 +3,6 @@ from collections import deque
 from dataclasses import dataclass, field
 from app.config import config
 
-HISTORY_TIMEOUT = 60
-
 @dataclass
 class Session:
     messages: deque = field(default_factory=lambda: deque(maxlen=config.app.max_message_history))
@@ -16,7 +14,7 @@ _sessions: dict[str, Session] = {}
 def get_session(device_id: str, intent: str = "") -> Session:
     session = _sessions.get(device_id)
 
-    if session is None or time.time() - session.last_active > HISTORY_TIMEOUT:
+    if session is None or time.time() - session.last_active > config.app.session_timeout:
         session = Session()
         _sessions[device_id] = session
     elif intent and intent != session.last_intent:

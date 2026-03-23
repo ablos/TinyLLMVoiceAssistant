@@ -26,6 +26,7 @@ class SearXNGConfig:
 class AppConfig:
     max_message_history: int = 8
     max_search_results: int = 5
+    session_timeout: int = 60
     
 @dataclass
 class Config:
@@ -60,6 +61,7 @@ def load_config(path: str = "data/config.yaml") -> Config:
         app=AppConfig(
             max_message_history=int(os.getenv("MAX_MESSAGE_HISTORY", raw.get("app", {}).get("max_message_history", 8))),
             max_search_results=int(os.getenv("MAX_SEARCH_RESULTS", raw.get("app", {}).get("max_search_results", 5))),
+            session_timeout=int(os.getenv("SESSION_TIMEOUT", raw.get("app", {}).get("session_timeout", 60))),
         ),
         devices=raw.get("devices", {})
     )
