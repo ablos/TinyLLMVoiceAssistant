@@ -1,3 +1,4 @@
+import logging
 from app.config import config
 from app.ollama_client import chat
 from app.ha_client import get_context_info
@@ -15,6 +16,7 @@ CLASSIFY_PROMPT = """
     No explanation, no punctuation.
 """
 
+logger = logging.getLogger(__name__)
 
 async def classify(text: str) -> tuple[str, str]:
     messages = [
@@ -24,6 +26,8 @@ async def classify(text: str) -> tuple[str, str]:
     
     response = await chat(config.ollama.router_model, messages)
     result = (response.content or "").strip().lower()
+    
+    logger.info("Router output: " + result)
     
     if result.startswith("search|"):
         _, query = result.split("|", 1)
