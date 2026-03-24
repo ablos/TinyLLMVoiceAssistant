@@ -8,7 +8,7 @@ CLASSIFY_PROMPT = """
     Classify the user's message into exactly one of these intents:
     
     - ha_control: The user wants to control a Home Assistant device (lights, thermostat, scenes, switches, etc.)
-    - search: The user wants to look something up on the internet or requires time sensitive knowledge
+    - search: The user wants to look something up on the internet, OR the answer could have changed recently (current events, who holds a position, prices, sports scores, etc.)
     - timer: The user wants to set a timer or reminder (e.g. "set a timer for 10 minutes", "remind me in 5 minutes to take out the pizza")
     - general: Anything else (questions, conversation, calculations, etc.) including questions about current time or date, since that information is already provided.
     
