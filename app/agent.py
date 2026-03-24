@@ -106,7 +106,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
         entities = await get_live_states(entities)
         
         entity_list = "\n".join(
-            f"- {e['entity_id']} ({e['friendly_name']}, state: {e['state']})"
+            f"- {e['entity_id']} ({e['friendly_name']}, area: {e['area'] or 'unknown'}, state: {e['state']})"
             for e in entities
         )
         

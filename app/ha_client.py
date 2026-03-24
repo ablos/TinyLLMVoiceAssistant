@@ -56,11 +56,15 @@ async def refresh_entities():
         "config/device_registry/list",
         "config/entity_registry/list",
         "assist_pipeline/pipeline/list",
+        "config/area_registry/list",
     )
-    
+
     devices = results[1]
     entity_registry = results[2]
     pipeline_result = results[3]
+    area_registry = results[4]
+
+    areas = { a["area_id"]: a["name"] for a in area_registry }
     
     pipelines = pipeline_result.get("pipelines", [])
     prefered_id = pipeline_result.get("preferred_pipeline")
@@ -98,10 +102,12 @@ async def refresh_entities():
         
         for label in entry.get("labels", []):
             state = states[entity_id]
+            area_id = entry.get("area_id")
             new_entities_by_label.setdefault(label, []).append({
                 "entity_id": entity_id,
                 "friendly_name": state["attributes"].get("friendly_name", entity_id),
                 "state": state["state"],
+                "area": areas.get(area_id, "") if area_id else "",
             })
             
     global entities_by_label, device_labels, device_media_players, ha_location, ha_timezone, ha_tts_engine
