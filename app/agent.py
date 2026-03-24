@@ -121,6 +121,7 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
         
         tools = _tools_for_entities(entities)
         logger.info("Tools: %s", [t["function"]["name"] for t in tools])
+        logger.debug("Entity list:\n%s", entity_list)
         
     elif intent == "search":
         search_results = await search(query or text)
@@ -167,7 +168,6 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     messages.append({ "role": "user", "content": text })
 
     logger.info("Context: %d entities, %d history messages", len(entities), len(session.messages))
-    logger.debug("Entities: %s", [e['friendly_name'] for e in entities])
 
     # Call LLM
     response = await chat(config.ollama.main_model, messages, tools)
