@@ -88,6 +88,7 @@ async def refresh_entities():
         ha_config = config_resp.json()
         
     new_device_labels = { d["id"]: d.get("labels", []) for d in devices }
+    device_areas = { d["id"]: d.get("area_id") for d in devices }
     new_entities_by_label: dict[str, list[dict]] = {}
     new_device_media_players: dict[str, str] = {}
     
@@ -102,7 +103,7 @@ async def refresh_entities():
         
         for label in entry.get("labels", []):
             state = states[entity_id]
-            area_id = entry.get("area_id")
+            area_id = entry.get("area_id") or device_areas.get(entry.get("device_id"))
             new_entities_by_label.setdefault(label, []).append({
                 "entity_id": entity_id,
                 "friendly_name": state["attributes"].get("friendly_name", entity_id),
