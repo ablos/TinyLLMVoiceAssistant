@@ -105,9 +105,17 @@ async def run(text: str, device_id: str, intent: str, query: str = "") -> str:
     if intent == "ha_control":
         entities = await get_live_states(entities)
         
+        grouped: dict[str, list] = {}
+        for e in entities:
+            area = e['area'] or 'Unknown'
+            grouped.setdefault(area, []).append(e)
+
         entity_list = "\n".join(
-            f"- {e['entity_id']} ({e['friendly_name']}, area: {e['area'] or 'unknown'}, state: {e['state']})"
-            for e in entities
+            f"{'No area' if area == 'Unknown' else area + ' Area'}:\n" + "\n".join(
+                f"  - {e['entity_id']} ({e['friendly_name']}, state: {e['state']})"
+                for e in group
+            )
+            for area, group in grouped.items()
         )
         
         system_prompt = f"""
